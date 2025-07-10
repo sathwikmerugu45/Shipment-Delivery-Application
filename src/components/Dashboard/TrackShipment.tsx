@@ -178,9 +178,18 @@ export const TrackShipment: React.FC = () => {
             <div className="p-4 bg-green-50 rounded-lg">
               <div className="flex items-center mb-2">
                 <Package className="w-5 h-5 text-green-600 mr-2" />
-                <h4 className="font-medium text-green-900">Total Cost</h4>
+                <h4 className="font-medium text-green-900">Payment Details</h4>
               </div>
-              <p className="text-green-700">₹{shipment.cost}</p>
+              <div className="space-y-1">
+                <p className="text-green-700">Amount: ₹{shipment.cost}</p>
+                <p className={`text-sm font-medium ${
+                  shipment.payment_status === 'paid' ? 'text-green-700' :
+                  shipment.payment_status === 'failed' ? 'text-red-700' :
+                  'text-yellow-700'
+                }`}>
+                  Status: {shipment.payment_status.charAt(0).toUpperCase() + shipment.payment_status.slice(1)}
+                </p>
+              </div>
             </div>
           </div>
         </div>

@@ -4,6 +4,7 @@ import { supabase } from '../../lib/supabase';
 import { Shipment } from '../../types';
 import { v4 as uuidv4 } from 'uuid';
 import { Package, User, MapPin, Phone, Weight, Ruler, CreditCard } from 'lucide-react';
+import { PaymentModal } from '../Payment/PaymentModal';
 
 interface CreateShipmentProps {
   onShipmentCreated: (shipment: Shipment) => void;
@@ -13,6 +14,8 @@ export const CreateShipment: React.FC<CreateShipmentProps> = ({ onShipmentCreate
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [pendingShipment, setPendingShipment] = useState<any>(null);
   const [formData, setFormData] = useState({
     senderName: '',
     senderAddress: '',
@@ -43,7 +46,7 @@ export const CreateShipment: React.FC<CreateShipmentProps> = ({ onShipmentCreate
     return Math.round((baseRate + weightRate) * serviceMultiplier);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!user) {
@@ -51,45 +54,61 @@ export const CreateShipment: React.FC<CreateShipmentProps> = ({ onShipmentCreate
       return;
     }
 
+    setError('');
+
+    // Prepare shipment data for payment
+    const trackingNumber = `ST${Date.now()}${Math.floor(Math.random() * 1000)}`;
+    const cost = calculateCost();
+    const estimatedDelivery = new Date();
+    
+    // Add delivery time based on service type
+    const deliveryDays = 
+      formData.serviceType === 'overnight' ? 1 :
+      formData.serviceType === 'express' ? 2 : 5;
+    
+    estimatedDelivery.setDate(estimatedDelivery.getDate() + deliveryDays);
+
+    const shipmentData = {
+      id: uuidv4(),
+      user_id: user.id,
+      tracking_number: trackingNumber,
+      sender_name: formData.senderName,
+      sender_address: formData.senderAddress,
+      sender_phone: formData.senderPhone,
+      receiver_name: formData.receiverName,
+      receiver_address: formData.receiverAddress,
+      receiver_phone: formData.receiverPhone,
+      package_weight: parseFloat(formData.packageWeight),
+      package_dimensions: formData.packageDimensions,
+      service_type: formData.serviceType,
+      status: 'pending' as const,
+      estimated_delivery: estimatedDelivery.toISOString(),
+      cost,
+      payment_status: 'pending' as const,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    setPendingShipment(shipmentData);
+    setShowPaymentModal(true);
+  };
+
+  const handlePaymentSuccess = async () => {
+    if (!pendingShipment) return;
+
     setLoading(true);
     setError('');
 
     try {
-      const trackingNumber = `ST${Date.now()}${Math.floor(Math.random() * 1000)}`;
-      const cost = calculateCost();
-      const estimatedDelivery = new Date();
-      
-      // Add delivery time based on service type
-      const deliveryDays = 
-        formData.serviceType === 'overnight' ? 1 :
-        formData.serviceType === 'express' ? 2 : 5;
-      
-      estimatedDelivery.setDate(estimatedDelivery.getDate() + deliveryDays);
-
-      const shipmentData = {
-        id: uuidv4(),
-        user_id: user.id,
-        tracking_number: trackingNumber,
-        sender_name: formData.senderName,
-        sender_address: formData.senderAddress,
-        sender_phone: formData.senderPhone,
-        receiver_name: formData.receiverName,
-        receiver_address: formData.receiverAddress,
-        receiver_phone: formData.receiverPhone,
-        package_weight: parseFloat(formData.packageWeight),
-        package_dimensions: formData.packageDimensions,
-        service_type: formData.serviceType,
-        status: 'pending' as const,
-        estimated_delivery: estimatedDelivery.toISOString(),
-        cost,
-        payment_status: 'pending' as const,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+      // Update payment status to paid
+      const updatedShipmentData = {
+        ...pendingShipment,
+        payment_status: 'paid' as const,
       };
 
       const { data, error } = await supabase
         .from('shipments')
-        .insert([shipmentData])
+        .insert([updatedShipmentData])
         .select()
         .single();
 
@@ -97,7 +116,7 @@ export const CreateShipment: React.FC<CreateShipmentProps> = ({ onShipmentCreate
 
       onShipmentCreated(data);
       
-      // Reset form
+      // Reset form and state
       setFormData({
         senderName: '',
         senderAddress: '',
@@ -109,6 +128,7 @@ export const CreateShipment: React.FC<CreateShipmentProps> = ({ onShipmentCreate
         packageDimensions: '',
         serviceType: 'standard',
       });
+      setPendingShipment(null);
       
     } catch (err: any) {
       setError(err.message || 'Failed to create shipment');
@@ -348,14 +368,30 @@ export const CreateShipment: React.FC<CreateShipmentProps> = ({ onShipmentCreate
           <div className="flex justify-end">
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !formData.senderName || !formData.receiverName || !formData.packageWeight}
               className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Creating Shipment...' : 'Create Shipment'}
+              {loading ? 'Processing...' : 'Proceed to Payment'}
             </button>
           </div>
         </form>
       </div>
+
+      <PaymentModal
+        isOpen={showPaymentModal}
+        onClose={() => {
+          setShowPaymentModal(false);
+          setPendingShipment(null);
+        }}
+        onPaymentSuccess={handlePaymentSuccess}
+        amount={pendingShipment?.cost || 0}
+        shipmentDetails={{
+          trackingNumber: pendingShipment?.tracking_number || '',
+          senderName: pendingShipment?.sender_name || '',
+          receiverName: pendingShipment?.receiver_name || '',
+          serviceType: pendingShipment?.service_type || '',
+        }}
+      />
     </div>
   );
 };

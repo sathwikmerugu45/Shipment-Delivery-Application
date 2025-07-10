@@ -1,6 +1,6 @@
 import React from 'react';
 import { Shipment } from '../../types';
-import { Package, Clock, CheckCircle, AlertCircle, TrendingUp, DollarSign } from 'lucide-react';
+import { Package, Clock, CheckCircle, AlertCircle, TrendingUp, DollarSign, CreditCard } from 'lucide-react';
 
 interface DashboardStatsProps {
   shipments: Shipment[];
@@ -13,6 +13,8 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ shipments }) => 
     inTransit: shipments.filter(s => s.status === 'in_transit').length,
     pending: shipments.filter(s => s.status === 'pending').length,
     totalSpent: shipments.reduce((sum, s) => sum + s.cost, 0),
+    paidShipments: shipments.filter(s => s.payment_status === 'paid').length,
+    pendingPayments: shipments.filter(s => s.payment_status === 'pending').length,
   };
 
   const recentShipments = shipments.slice(0, 5);
@@ -89,6 +91,16 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ shipments }) => 
           </span>
           <TrendingUp className="w-5 h-5 text-green-500" />
         </div>
+        <div className="mt-4 grid grid-cols-2 gap-4 pt-4 border-t border-gray-200">
+          <div>
+            <p className="text-sm text-gray-500">Paid Shipments</p>
+            <p className="text-lg font-semibold text-green-600">{stats.paidShipments}</p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-500">Pending Payments</p>
+            <p className="text-lg font-semibold text-yellow-600">{stats.pendingPayments}</p>
+          </div>
+        </div>
       </div>
 
       {/* Recent Shipments */}
@@ -124,7 +136,17 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ shipments }) => 
                     }`}>
                       {shipment.status.replace('_', ' ')}
                     </span>
-                    <p className="text-sm text-gray-500 mt-1">₹{shipment.cost}</p>
+                    <div className="mt-1 space-y-1">
+                      <p className="text-sm text-gray-500">₹{shipment.cost}</p>
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                        shipment.payment_status === 'paid' ? 'bg-green-100 text-green-800' :
+                        shipment.payment_status === 'failed' ? 'bg-red-100 text-red-800' :
+                        'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        <CreditCard className="w-3 h-3 mr-1" />
+                        {shipment.payment_status}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>

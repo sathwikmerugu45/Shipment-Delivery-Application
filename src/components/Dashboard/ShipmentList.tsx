@@ -159,6 +159,16 @@ export const ShipmentList: React.FC<ShipmentListProps> = ({ shipments, loading, 
                       <p className="text-sm text-gray-500">Cost</p>
                       <p className="font-medium text-gray-900">₹{shipment.cost}</p>
                     </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Payment</p>
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                        shipment.payment_status === 'paid' ? 'bg-green-100 text-green-800' :
+                        shipment.payment_status === 'failed' ? 'bg-red-100 text-red-800' :
+                        'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {shipment.payment_status}
+                      </span>
+                    </div>
                   </div>
                   
                   <div className="flex space-x-2">
