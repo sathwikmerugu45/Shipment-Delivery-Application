@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { supabase } from '../../lib/supabase';
 import { Shipment } from '../../types';
 import { v4 as uuidv4 } from 'uuid';
 import { Package, User, MapPin, Phone, Weight, Ruler, CreditCard } from 'lucide-react';
 import { PaymentModal } from '../Payment/PaymentModal';
+import { saveShipment, createTrackingEvent } from '../../lib/localStorage';
 
 interface CreateShipmentProps {
   onShipmentCreated: (shipment: Shipment) => void;
@@ -106,15 +106,13 @@ export const CreateShipment: React.FC<CreateShipmentProps> = ({ onShipmentCreate
         payment_status: 'paid' as const,
       };
 
-      const { data, error } = await supabase
-        .from('shipments')
-        .insert([updatedShipmentData])
-        .select()
-        .single();
+      // Save shipment to local storage
+      saveShipment(updatedShipmentData);
+      
+      // Create initial tracking event
+      createTrackingEvent(updatedShipmentData, 'pending');
 
-      if (error) throw error;
-
-      onShipmentCreated(data);
+      onShipmentCreated(updatedShipmentData);
       
       // Reset form and state
       setFormData({

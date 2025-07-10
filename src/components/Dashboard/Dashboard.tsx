@@ -4,10 +4,10 @@ import { ShipmentList } from './ShipmentList';
 import { CreateShipment } from './CreateShipment';
 import { TrackShipment } from './TrackShipment';
 import { DashboardStats } from './DashboardStats';
-import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { Shipment } from '../../types';
 import { Package, Plus, Search, BarChart3 } from 'lucide-react';
+import { getShipmentsByUserId } from '../../lib/localStorage';
 
 export const Dashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'shipments' | 'create' | 'track'>('dashboard');
@@ -23,14 +23,12 @@ export const Dashboard: React.FC = () => {
     if (!user) return;
 
     try {
-      const { data, error } = await supabase
-        .from('shipments')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setShipments(data || []);
+      const userShipments = getShipmentsByUserId(user.id);
+      // Sort by created_at descending
+      const sortedShipments = userShipments.sort((a, b) => 
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+      setShipments(sortedShipments);
     } catch (error) {
       console.error('Error fetching shipments:', error);
     } finally {

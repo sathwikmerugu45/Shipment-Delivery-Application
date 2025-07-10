@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { supabase } from '../lib/supabase';
 import { User, AuthContextType } from '../types';
+import { saveUser, getCurrentUser, clearCurrentUser, getUsers } from '../lib/localStorage';
+import { v4 as uuidv4 } from 'uuid';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -17,73 +18,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        fetchUserProfile(session.user.id);
-      }
-      setLoading(false);
-    });
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (session?.user) {
-          fetchUserProfile(session.user.id);
-        } else {
-          setUser(null);
-        }
-        setLoading(false);
-      }
-    );
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const fetchUserProfile = async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', userId);
-
-      if (error) throw error;
-      
-      if (data && data.length > 0) {
-        setUser(data[0]);
-      } else {
-        setUser(null);
-      }
-    } catch (error) {
-      console.error('Error fetching user profile:', error);
-      setUser(null);
+    // Check for existing user session
+    const currentUser = getCurrentUser();
+    if (currentUser) {
+      setUser(currentUser);
     }
-  };
+    setLoading(false);
+  }, []);
 
   const signup = async (email: string, password: string, fullName: string, phone: string) => {
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-      });
-
-      if (error) throw error;
-
-      if (data.user) {
-        // Create user profile
-        const { error: profileError } = await supabase
-          .from('users')
-          .insert([
-            {
-              id: data.user.id,
-              email,
-              full_name: fullName,
-              phone,
-            },
-          ]);
-
-        if (profileError) throw profileError;
+      // Check if user already exists
+      const existingUsers = getUsers();
+      const existingUser = existingUsers.find(u => u.email === email);
+      
+      if (existingUser) {
+        throw new Error('User with this email already exists');
       }
+
+      // Create new user
+      const newUser: User = {
+        id: uuidv4(),
+        email,
+        full_name: fullName,
+        phone,
+        created_at: new Date().toISOString(),
+      };
+
+      saveUser(newUser);
+      setUser(newUser);
     } catch (error) {
       console.error('Error signing up:', error);
       throw error;
@@ -92,12 +55,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      // Find user by email
+      const users = getUsers();
+      const user = users.find(u => u.email === email);
+      
+      if (!user) {
+        throw new Error('Invalid email or password');
+      }
 
-      if (error) throw error;
+      // In a real app, you'd verify the password here
+      // For demo purposes, we'll just log them in
+      saveUser(user);
+      setUser(user);
     } catch (error) {
       console.error('Error logging in:', error);
       throw error;
@@ -106,8 +75,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      clearCurrentUser();
       setUser(null);
     } catch (error) {
       console.error('Error logging out:', error);

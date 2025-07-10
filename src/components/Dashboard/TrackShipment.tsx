@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { supabase } from '../../lib/supabase';
 import { Shipment, TrackingEvent } from '../../types';
 import { Search, Package, MapPin, Clock, CheckCircle, Truck, Calendar } from 'lucide-react';
+import { getShipmentByTrackingNumber, getTrackingEventsByShipmentId } from '../../lib/localStorage';
 
 export const TrackShipment: React.FC = () => {
   const [trackingNumber, setTrackingNumber] = useState('');
@@ -24,34 +24,24 @@ export const TrackShipment: React.FC = () => {
     setTrackingEvents([]);
 
     try {
-      // Fetch shipment details
-      const { data: shipmentData, error: shipmentError } = await supabase
-        .from('shipments')
-        .select('*')
-        .eq('tracking_number', trackingNumber.trim())
-        .single();
-
-      if (shipmentError) {
-        if (shipmentError.code === 'PGRST116') {
-          setError('Tracking number not found');
-        } else {
-          throw shipmentError;
-        }
+      // Fetch shipment from local storage
+      const shipmentData = getShipmentByTrackingNumber(trackingNumber.trim());
+      
+      if (!shipmentData) {
+        setError('Tracking number not found');
         return;
       }
 
       setShipment(shipmentData);
 
-      // Fetch tracking events
-      const { data: eventsData, error: eventsError } = await supabase
-        .from('tracking_events')
-        .select('*')
-        .eq('shipment_id', shipmentData.id)
-        .order('timestamp', { ascending: false });
+      // Fetch tracking events from local storage
+      const eventsData = getTrackingEventsByShipmentId(shipmentData.id);
+      // Sort by timestamp descending
+      const sortedEvents = eventsData.sort((a, b) => 
+        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      );
 
-      if (eventsError) throw eventsError;
-
-      setTrackingEvents(eventsData || []);
+      setTrackingEvents(sortedEvents);
       
     } catch (err: any) {
       setError(err.message || 'Failed to track shipment');

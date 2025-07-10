@@ -66,14 +66,16 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
     // Auto-close and trigger success after showing success message
     setTimeout(() => {
       onPaymentSuccess();
-      onClose();
-      setPaymentStep('details');
-      setPaymentData({
-        cardNumber: '',
-        expiryDate: '',
-        cvv: '',
-        cardholderName: '',
-      });
+      setTimeout(() => {
+        onClose();
+        setPaymentStep('details');
+        setPaymentData({
+          cardNumber: '',
+          expiryDate: '',
+          cvv: '',
+          cardholderName: '',
+        });
+      }, 500);
     }, 2000);
   };
 
