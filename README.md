@@ -47,8 +47,7 @@ A modern, full-featured shipment delivery application built with React, TypeScri
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/shiptracker-pro.git
-   cd shiptracker-pro
+   git clone https://github.com/sathwikmerugu45/Shipment-Delivery-Application.git
    ```
 
 2. **Install dependencies**
@@ -81,12 +80,10 @@ Create a `.env` file in the root directory with the following variables:
 
 ```env
 # Supabase Configuration (Optional - app works without these)
-VITE_SUPABASE_URL=your_supabase_project_url
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+VITE_SUPABASE_URL=https://gyzzsbfsogejghrmshaa.supabase.co
+VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd5enpzYmZzb2dlamdocm1zaGFhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIxMzMxMTcsImV4cCI6MjA2NzcwOTExN30.7dgd4ZKImrw6zh-IF6Xg2iqJ7v_mjfzwRTlANPpJFUk
 
-# Example values for testing (replace with your actual Supabase credentials)
-# VITE_SUPABASE_URL=https://your-project.supabase.co
-# VITE_SUPABASE_ANON_KEY=your-anon-key-here
+
 ```
 
 ### Getting Supabase Credentials
@@ -210,89 +207,4 @@ npm run db:push      # Push database migrations
 - **8px Grid System**: All spacing follows 8px increments
 - **Consistent Margins**: Standardized spacing throughout
 
-## 🚀 Deployment
 
-### Netlify Deployment
-
-1. **Build the project**
-   ```bash
-   npm run build
-   ```
-
-2. **Deploy to Netlify**
-   - Connect your GitHub repository to Netlify
-   - Set build command: `npm run build`
-   - Set publish directory: `dist`
-   - Add environment variables in Netlify dashboard
-
-### Vercel Deployment
-
-1. **Install Vercel CLI**
-   ```bash
-   npm i -g vercel
-   ```
-
-2. **Deploy**
-   ```bash
-   vercel --prod
-   ```
-
-## 🤝 Contributing
-
-1. **Fork the repository**
-2. **Create a feature branch**
-   ```bash
-   git checkout -b feature/amazing-feature
-   ```
-3. **Commit your changes**
-   ```bash
-   git commit -m 'Add some amazing feature'
-   ```
-4. **Push to the branch**
-   ```bash
-   git push origin feature/amazing-feature
-   ```
-5. **Open a Pull Request**
-
-## 📝 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🆘 Support
-
-### Common Issues
-
-**Q: App shows "Supabase not configured" errors**
-A: The app works perfectly without Supabase using local storage. These are just warnings and don't affect functionality.
-
-**Q: Data disappears when I clear browser data**
-A: In local storage mode, data is stored in your browser. For persistent data, set up Supabase.
-
-**Q: Payment processing fails**
-A: The payment system is simulated and always succeeds. This is for demonstration purposes.
-
-### Getting Help
-
-- 📧 **Email**: support@shiptracker.com
-- 💬 **Discord**: [Join our community](https://discord.gg/shiptracker)
-- 🐛 **Issues**: [GitHub Issues](https://github.com/yourusername/shiptracker-pro/issues)
-- 📖 **Documentation**: [Full Documentation](https://docs.shiptracker.com)
-
-## 🙏 Acknowledgments
-
-- **React Team** for the amazing framework
-- **Tailwind CSS** for the utility-first CSS framework
-- **Supabase** for the backend-as-a-service platform
-- **Lucide React** for the beautiful icons
-- **Vite** for the fast build tool
-
----
-
-<div align="center">
-  <p>Made with ❤️ by the ShipTracker Pro Team</p>
-  <p>
-    <a href="https://github.com/yourusername/shiptracker-pro">⭐ Star us on GitHub</a> •
-    <a href="https://twitter.com/shiptrackerpro">🐦 Follow on Twitter</a> •
-    <a href="https://shiptracker.com">🌐 Visit Website</a>
-  </p>
-</div>
